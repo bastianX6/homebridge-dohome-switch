@@ -1,17 +1,15 @@
 # homebridge-dohome-switch
 
-Homebridge plugin to control DoHome (Doit / DoHome) power plugs/switches via UDP.
+Homebridge plugin (TypeScript + ESM) to control DoHome (Doit / DoHome) power plugs/switches via UDP.
 
-This repository supports **direct device IP (`host`)** or legacy **UDP broadcast** (historical `subnet`) and **filters responses by `deviceid`**.
+Supports **direct device IP (`host`)** or legacy **UDP broadcast** (`subnet`) and **filters responses by `deviceid`**.
 
-## How it works today (summary)
+## How it works (summary)
 
 - Exposes a HomeKit `Service.Switch` (On/Off).
-- To turn on/off, sends a UDP packet to the configured `subnet` (usually a broadcast address like `x.x.x.255`) on port `6091`.
-- The device answers via UDP and the plugin validates that the `dev=` field in the response matches `deviceid`.
-- To fetch the initial state (when Homebridge starts), it sends a status query and retries several times on timeout.
-
-Key limitation: **without working UDP broadcast, the plugin cannot discover or control the device** (this matters for Docker, segmented networks, or VLANs).
+- Destination resolution: `host` (direct IP) if provided; otherwise `subnet` (usually a broadcast like `x.x.x.255`).
+- Power commands use `cmd=5` and queries use `cmd=25`, with retries at 0/250/500/750/1000 ms and timeout ~1.25 s.
+- Responses are accepted only when `dev` matches `deviceid`; query responses map `soft_poweroff` to switch state and otherwise keep last known state.
 
 ## Installation
 
@@ -28,7 +26,7 @@ Example (direct IP / recommended for Docker or segmented networks):
     "accessory": "DoHomeSwitch",
     "name": "DoHome Plug",
     "prodname": "65ff",
-  "host": "192.168.0.42",
+    "host": "192.168.0.42",
     "port": 6091,
     "deviceid": "955sga0g65ff_DT-PLUG_HOMEKIT"
 }
@@ -81,3 +79,4 @@ Notes:
 - Transport: UDP with retries at 0/250/500/750/1000 ms and timeout at ~1.25s.
 - Broadcast is enabled only when the destination looks like a broadcast address (`255.255.255.255` or ends with `.255`).
 - Startup query maps `soft_poweroff === 0` to On=true, `1` to On=false, and otherwise keeps the last known state.
+- Codebase: TypeScript, ESM (`type: "module"`), entrypoint in `src/index.ts`, protocol helpers in `src/protocol.ts`, UDP transport in `src/udp.ts`, tests in `test/` (Node `--test`).
