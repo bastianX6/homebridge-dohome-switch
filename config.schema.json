@@ -17,9 +17,16 @@
         "required": true,
         "default": "65ff"
       },
-      "subnet": {
-        "title": "Your Subnet",
+      "host": {
+        "title": "Device IP/host (unicast)",
         "type": "string",
+        "description": "Direct device address. Prefer this for Docker or segmented networks where broadcast fails.",
+        "required": false
+      },
+      "subnet": {
+        "title": "UDP destination (usually broadcast)",
+        "type": "string",
+        "description": "Broadcast address for legacy behavior (e.g. 192.168.0.255). Used when host is not provided.",
         "default": "192.168.0.255"
       },
       "port": {
